@@ -3,24 +3,16 @@ from tkinter import *
 from enum import Enum
 from collections import deque
 
+
 class COLOR(Enum):
-    '''
-    This class is created to use the Tkinter colors easily.
-    Each COLOR object has two color values.
-    The first two objects (dark and light) are for theme and the two color
-    values represent the Canvas color and the Maze Line color respectively.
-    The rest of the colors are for Agents.
-    The first value is the color of the Agent and the second is the color of
-    its footprint
-    '''
     dark=('gray11','white')
     light=('white','black')
     black=('black','dim gray')
     red=('red3','tomato')
-    cyan=('cyan4','cyan4')
     green=('green4','pale green')
     blue=('DeepSkyBlue4','DeepSkyBlue2')
     yellow=('yellow2','yellow2')
+
 
 class Agent:
     def __init__(
@@ -161,9 +153,6 @@ class Agent:
         self._position=newpos
 
     def _RCCW(self):
-        '''
-        To Rotate the agent in Counter Clock Wise direction
-        '''
         def pointNew(p,newOrigin):
             return (p[0]-newOrigin[0],p[1]-newOrigin[1])
 
@@ -183,9 +172,6 @@ class Agent:
  
         
     def _RCW(self):
-        '''
-        To Rotate the agent in Clock Wise direction
-        '''
         def pointNew(p,new_origin):
             return (p[0]-new_origin[0],p[1]-new_origin[1])
 
@@ -207,62 +193,26 @@ class Agent:
         self.parent_maze._canvas.coords(self._head,*self._coord)
         self._orient=(self._orient+1)%4
 
-    def move_right(self,event):
+    def move_right(self):
         if self.parent_maze.maze_map[self.x,self.y]['E']==True:
             self.y=self.y+1
 
-    def move_left(self,event):
+    def move_left(self):
         if self.parent_maze.maze_map[self.x,self.y]['W']==True:
             self.y=self.y-1
 
-    def move_up(self,event):
+    def move_up(self):
         if self.parent_maze.maze_map[self.x,self.y]['N']==True:
             self.x=self.x-1
             self.y=self.y
 
-    def move_down(self,event):
+    def move_down(self):
         if self.parent_maze.maze_map[self.x,self.y]['S']==True:
             self.x=self.x+1
             self.y=self.y
 
 
-class TextLabel:
-    '''
-    This class is to create Text Label to show different results on the window.
-    '''
-    def __init__(self,parent_maze,title,value):
-        '''
-        parentmaze-->   The maze on which Label will be displayed.
-        title-->        The title of the value to be displayed
-        value-->        The value to be displayed
-        '''
-        self.title=title
-        self._value=value
-        self.parent_maze=parent_maze
-        # self._parentMaze._labels.append(self)
-        self._var=None
-        self.drawLabel()
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self,v):
-        self._value=v
-        self._var.set(f'{self.title} : {v}')
-
-    def drawLabel(self):
-        self._var = StringVar()
-        self.lab = Label(self.parent_maze._canvas, textvariable=self._var, bg="white", fg="black",font=('Helvetica bold',12),relief=RIDGE)
-        self._var.set(f'{self.title} : {self.value}')
-        self.lab.pack(expand = True,side=LEFT,anchor=NW)
-
-
 class Maze:
-    '''
-    This is the main class to create maze.
-    '''
     def __init__(self, rows=10, cols=10):
         self.rows=rows
         self.cols=cols
@@ -280,21 +230,18 @@ class Maze:
         return self._grid
 
     @grid.setter        
-    def grid(self,n):
+    def grid(self, n):
         self._grid=[]
         y=0
-        for n in range(self.cols):
+        for _ in range(self.cols):
             x = 1
             y = 1+y
-            for m in range(self.rows):
+            for _ in range(self.rows):
                 self.grid.append((x,y))
                 self.maze_map[x,y]={'E':0,'W':0,'N':0,'S':0}
                 x = x + 1 
 
     def open_east(self,x, y):
-        '''
-        To remove the East Wall of the cell
-        '''
         self.maze_map[x,y]['E']=1
         if y+1<=self.cols:
             self.maze_map[x,y+1]['W']=1
@@ -315,18 +262,6 @@ class Maze:
             self.maze_map[x+1,y]['N']=1
     
     def create_maze(self,x=1,y=1,pattern=None,loop_percent=0,save_maze=False,load_maze=None,theme:COLOR=COLOR.dark):
-        '''
-        One very important function to create a Random Maze
-        pattern-->  It can be 'v' for vertical or 'h' for horizontal
-                    Just the visual look of the maze will be more vertical/horizontal
-                    passages will be there.
-        loopPercent-->  0 means there will be just one path from start to goal (perfect maze)
-                        Higher value means there will be multiple paths (loops)
-                        Higher the value (max 100) more will be the loops
-        saveMaze--> To save the generated Maze as CSV file for future reference.
-        loadMaze--> Provide the CSV file to generate a desried maze
-        theme--> Dark or Light
-        '''
         _stack=[]
         _closed=[]
         self.theme=theme
@@ -353,9 +288,6 @@ class Maze:
             return n
 
         def remove_wall_in_between(cell1,cell2):
-            '''
-            To remove wall in between two cells
-            '''
             if cell1[0]==cell2[0]:
                 if cell1[1]==cell2[1]+1:
                     self.maze_map[cell1]['W']=1
@@ -372,9 +304,6 @@ class Maze:
                     self.maze_map[cell2]['N']=1
 
         def is_cyclic(cell1, cell2):
-            '''
-            To avoid too much blank(clear) path.
-            '''
             ans=False
             if cell1[0]==cell2[0]:
                 if cell1[1]>cell2[1]: cell1,cell2=cell2,cell1
@@ -394,15 +323,7 @@ class Maze:
                         ans= True
             return ans
 
-        def BFS(cell):
-            '''
-            Breadth First Search
-            To generate the shortest path.
-            This will be used only when there are multiple paths (loopPercent>0) or
-            Maze is loaded from a CSV file.
-            If a perfect maze is generated and without the load file, this method will
-            not be used since the Maze generation will calculate the path.
-            '''
+        def get_path(cell):
             frontier = deque()
             frontier.append(cell)
             path = {}
@@ -553,7 +474,7 @@ class Maze:
                             i+=1
                         if i==len(notPathCells):
                             break
-                self.path=BFS((self.rows,self.cols))
+                self.path=get_path((self.rows,self.cols))
         else:
             # Load maze from CSV file
             with open(load_maze,'r') as f:
@@ -573,7 +494,7 @@ class Maze:
                     c[0]=int(c[0].lstrip('('))
                     c[1]=int(c[1].rstrip(')'))
                     self.maze_map[tuple(c)]={'E':int(i[1]),'W':int(i[2]),'N':int(i[3]),'S':int(i[4])}
-            self.path=BFS((self.rows,self.cols))
+            self.path=get_path((self.rows,self.cols))
         self.draw_maze(self.theme)
 
         # DEFAULT AGENT SETTINGS
@@ -594,10 +515,6 @@ class Maze:
                 f.truncate()
 
     def draw_maze(self, theme):
-        '''
-        Creation of Tkinter window and maze lines
-        '''
-        
         self._LabWidth=26 # Space from the top for Labels
         self._win=Tk()
         self._win.state('zoomed')
@@ -643,11 +560,6 @@ class Maze:
                         self._canvas.create_line(y, x + w, y + w, x + w,width=2,fill=theme.value[1],tag='line')
 
     def redraw_cell(self,x,y,theme):
-        '''
-        To redraw a cell.
-        With Full sized square agent, it can overlap with maze lines
-        So the cell is redrawn so that cell lines are on top
-        '''
         w=self._cell_width
         cell=(x,y)
         x=x*w-w+self._LabWidth
@@ -661,34 +573,10 @@ class Maze:
         if self.maze_map[cell]['S']==False:
             self._canvas.create_line(y, x + w, y + w, x + w,width=2,fill=theme.value[1])
 
-    def enable_arrow_key(self,a):
-        '''
-        To control an agent a with Arrow Keys
-        '''
-        self._win.bind('<Left>',a.moveLeft)
-        self._win.bind('<Right>',a.moveRight)
-        self._win.bind('<Up>',a.moveUp)
-        self._win.bind('<Down>',a.moveDown)
-    
-    def enable_wasd(self,a):
-        '''
-        To control an agent a with keys W,A,S,D
-        '''
-        self._win.bind('<a>',a.moveLeft)
-        self._win.bind('<d>',a.moveRight)
-        self._win.bind('<w>',a.moveUp)
-        self._win.bind('<s>',a.moveDown)
-
     _tracePathList=[]
     def trace_path_single(self,a,p,kill,show_marked,delay):
-        '''
-        An interal method to help tracePath method for tracing a path by agent.
-        '''
         
         def kill_agent(a):
-            '''
-            if the agent should be killed after it reaches the Goal or completes the path
-            '''
             for i in range(len(a._body)):
                 self._canvas.delete(a._body[i])
             self._canvas.delete(a._head) 
@@ -862,10 +750,6 @@ class Maze:
         self._win.after(delay, self.trace_path_single,a,p,kill,show_marked,delay)    
 
     def trace_path(self,d,kill=False,delay=300,show_marked=False):
-        '''
-        A method to trace path by agent
-        You can provide more than one agent/path details
-        '''
         self._tracePathList.append((d,kill,delay))
         if Maze._tracePathList[0][0]==d: 
             for a,p in d.items():
@@ -873,7 +757,4 @@ class Maze:
                     self.trace_path_single(a,p,kill,show_marked,delay)
 
     def run(self):
-        '''
-        Finally to run the Tkinter Main Loop
-        '''
         self._win.mainloop()
