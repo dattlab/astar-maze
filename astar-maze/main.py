@@ -73,25 +73,27 @@ def h(c1, c2):
     return abs(x1 - x2) + abs(y1 - y2)
 
 
-def print_path(_path):
+def print_path(_path, is_search=False):
+    if is_search:
+        _path = _path[1:]
     for coord in _path:
-        print(f"{coord} -> ", end="")
+        print(f"-> {coord}")
     print()
 
 
 def main() -> None:
     m = Maze(8, 8)
-    m.create_maze(load_maze="sample_map.csv")
+    m.create_maze(load_maze="../sample_map.csv")
 
     search_path, forward_path = a_star(m)
 
     search_agent = Agent(m, footprints=True, filled=True)
     forward_agent = Agent(m, footprints=True, color=COLOR.red)
 
-    print("SEARCH PATH: ", end="")
-    print_path(search_path)
+    print("SEARCH PATH: ")
+    print_path(search_path, True)
 
-    print("FORWARD PATH: ", end="")
+    print("FORWARD PATH: ")
     print_path(forward_path)
 
     m.trace_path({search_agent: search_path}, delay=200)
